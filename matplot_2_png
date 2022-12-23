@@ -1,0 +1,30 @@
+import matplotlib.pyplot as plt
+import base64
+
+def generate_html(inference):
+    # Generate graph using matplotlib
+    plt.plot(inference)
+    plt.title("Inference Graph")
+    plt.xlabel("Time")
+    plt.ylabel("Inference")
+
+    # Save graph to image file
+    plt.savefig("inference.png")
+
+    # Encode image file as base64 string
+    with open("inference.png", "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Generate HTML code
+    html = f"""
+    <html>
+        <body>
+            <h1>Inference Graph</h1>
+            <img src="data:image/png;base64,{image_data}"/>
+        </body>
+    </html>
+    """
+
+    # Write HTML code to file
+    with open("inference.html", "w") as html_file:
+        html_file.write(html)
