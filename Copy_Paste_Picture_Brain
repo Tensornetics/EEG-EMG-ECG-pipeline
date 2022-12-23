@@ -1,0 +1,43 @@
+import svgwrite
+
+# Function to generate SVG image of graph
+
+
+def generate_svg(data):
+    # Set up SVG canvas
+    dwg = svgwrite.Drawing(size=("500px", "500px"))
+
+    # Extract data from vectorized database
+    x_values = [x[0] for x in data]
+    y_values = [y[1] for y in data]
+
+    # Calculate scale and offset for graph
+    min_x = min(x_values)
+    max_x = max(x_values)
+    min_y = min(y_values)
+    max_y = max(y_values)
+    scale_x = (max_x - min_x) / 500
+    scale_y = (max_y - min_y) / 500
+    offset_x = -min_x / scale_x
+    offset_y = -min_y / scale_y
+
+    # Draw graph
+    for i in range(len(x_values) - 1):
+        x1 = x_values[i] / scale_x + offset_x
+        y1 = y_values[i] / scale_y + offset_y
+        x2 = x_values[i+1] / scale_x + offset_x
+        y2 = y_values[i+1] / scale_y + offset_y
+        dwg.add(dwg.line((x1, y1), (x2, y2), stroke=svgwrite.rgb(0, 0, 0)))
+
+    # Save SVG image to file
+    dwg.save()
+
+
+# Test data
+data = [
+    (1.0, 2.0),
+    (2.0, 3.0),
+    (3.0, 4.0),
+    (4.0, 5.0),
+    (5.0, 6.0)
+]
