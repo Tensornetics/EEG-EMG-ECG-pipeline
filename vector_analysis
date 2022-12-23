@@ -1,0 +1,50 @@
+using System;
+using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using TensorFlow;
+
+namespace DataProcessing
+{
+    class Program
+    {
+        // Function to ingest and process data streams
+        static async Task ProcessData(double[] ecg, double[] emg, double[] eeg)
+        {
+            // Normalize data
+            var ecgMean = ecg.Average();
+            var ecgStd = Math.Sqrt(ecg.Sum(x => Math.Pow(x - ecgMean, 2)) / (ecg.Length - 1));
+            var ecgNorm = ecg.Select(x => (x - ecgMean) / ecgStd).ToArray();
+            var emgMean = emg.Average();
+            var emgStd = Math.Sqrt(emg.Sum(x => Math.Pow(x - emgMean, 2)) / (emg.Length - 1));
+            var emgNorm = emg.Select(x => (x - emgMean) / emgStd).ToArray();
+            var eegMean = eeg.Average();
+            var eegStd = Math.Sqrt(eeg.Sum(x => Math.Pow(x - eegMean, 2)) / (eeg.Length - 1));
+            var eegNorm = eeg.Select(x => (x - eegMean) / eegStd).ToArray();
+            
+            // Store normalized data in local and cloud databases
+            // TODO: Implement database connection and storage
+            
+            // Load TensorFlow model
+            using (var graph = new TFGraph())
+            using (var model = new TFSavedModel(graph, "model"))
+            using (var session = new TFSession(graph))
+            {
+                // Run prediction using TensorFlow model
+                var inputs = new[] {
+                    TFTensor.FromBuffer(new long[] { 1, ecgNorm.Length }, ecgNorm, 0, ecgNorm.Length),
+                    TFTensor.FromBuffer(new long[] { 1, emgNorm.Length }, emgNorm, 0, emgNorm.Length),
+                    TFTensor.FromBuffer(new long[] { 1, eegNorm.Length }, eegNorm, 0, eegNorm.Length)
+                };
+                var outputs = session.Run(new[] {
+                    (model["ecg_input"], inputs[0]),
+                    (model["emg_input"], inputs[1]),
+                    (model["eeg_input"], inputs[2])
+                }, new[] { model["output_node"] }, null);
+                
+                // Print prediction
+                Console.WriteLine($"Prediction: {outputs[0].GetValue()}");
+            }
+        }
+        
