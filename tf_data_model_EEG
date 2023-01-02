@@ -1,0 +1,25 @@
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+
+# split EEG data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(eeg_data, labels, test_size=0.2)
+
+# define model architecture
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(3, 1)),
+    tf.keras.layers.MaxPool1D(pool_size=2),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(6, activation='softmax')
+])
+
+# compile model
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# train model and evaluate on testing set
+history = model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
+
+# check if model performs well
+if history.history['val_accuracy'][-1] > 0.9:
+    # save model to k8s database
+    model.save('eeg_directional_model.h5')
